@@ -31,21 +31,6 @@ Servidor Node.js para processamento de imagens com aprendizado de máquina, util
 
 ---
 
-## **Estrutura do Projeto**
-ml5-image-server/
-│
-├─ uploads/ # Pasta para salvar imagens enviadas e processadas
-├─ libs/ # Bibliotecas JS locais (opcional, p5.js e ml5.min.js)
-├─ server.js # Servidor Node.js e endpoints
-├─ functions.js # Funções para salvar/processar imagens
-├─ index.html # Front-end para enviar imagens e ver resultados
-├─ scripts.js # Script front-end para preview e classificação
-├─ package.json # Dependências do projeto
-└─ README.md
-
-
----
-
 ## **Instalação**
 
 1. Clone o repositório:
