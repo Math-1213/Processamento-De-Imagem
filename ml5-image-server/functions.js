@@ -23,33 +23,27 @@ function mostrarImagem(imgSrc, container, labelText = null) {
 }
 
 // Função para processar imagem com MobileNet
-async function processarImagem(imgEl) {
-  const classifier = await ml5.imageClassifier("MobileNet");
-  const results = await classifier.classify(imgEl);
-  return results;
-}
-
 async function processarImagemNode(caminhoImagem, pastaSaida) {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
-  // Converte a imagem para Base64
+  const ext = path.extname(caminhoImagem).toLowerCase();
+  const mime = ext === ".png" ? "image/png" : "image/jpeg";
   const imageBase64 = fs.readFileSync(caminhoImagem, { encoding: "base64" });
-  const imgDataUrl = `data:image/jpeg;base64,${imageBase64}`;
+  const imgDataUrl = `data:${mime};base64,${imageBase64}`;
 
-  // Abre página em branco
+  console.log("1")
   await page.goto("about:blank");
-
-  // Adiciona p5.js e ml5.js
   await page.addScriptTag({
     url: "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js",
   });
+  console.log("1.5")
   await page.addScriptTag({
-    url: "https://cdnjs.cloudflare.com/ajax/libs/ml5/1.0.1/ml5.min.js",
+    url: "https://unpkg.com/ml5@1/dist/ml5.min.js",
   });
+  console.log("2")
 
-  // Espera ml5 carregar antes de usar
-  await page.waitForFunction("typeof ml5 !== 'undefined'");
+  await page.waitForFunction("typeof ml5 !== 'undefined'", { timeout: 10000 });
 
   const resultado = await page.evaluate(async (imgSrc) => {
     return new Promise((resolve, reject) => {
@@ -61,6 +55,7 @@ async function processarImagemNode(caminhoImagem, pastaSaida) {
           const results = await classifier.classify(img);
           resolve(results);
         } catch (err) {
+          console.error("Erro no evaluate:", err);
           reject(err);
         }
       };
@@ -70,7 +65,6 @@ async function processarImagemNode(caminhoImagem, pastaSaida) {
 
   await browser.close();
 
-  // Salva JSON do resultado
   const outputFilename = path.join(
     pastaSaida,
     "processed_" + path.basename(caminhoImagem) + ".json"
@@ -82,5 +76,5 @@ async function processarImagemNode(caminhoImagem, pastaSaida) {
 
 // Exportar funções para Node.js (server)
 if (typeof module !== "undefined") {
-  module.exports = { mostrarImagem, processarImagem, processarImagemNode };
+  module.exports = { mostrarImagem, processarImagemNode };
 }
