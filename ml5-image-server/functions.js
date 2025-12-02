@@ -32,18 +32,8 @@ async function processarImagemNode(caminhoImagem, pastaSaida) {
   const imageBase64 = fs.readFileSync(caminhoImagem, { encoding: "base64" });
   const imgDataUrl = `data:${mime};base64,${imageBase64}`;
 
-  console.log("1")
-  await page.goto("about:blank");
-  await page.addScriptTag({
-    url: "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js",
-  });
-  console.log("1.5")
-  await page.addScriptTag({
-    url: "https://unpkg.com/ml5@1/dist/ml5.min.js",
-  });
-  console.log("2")
-
-  await page.waitForFunction("typeof ml5 !== 'undefined'", { timeout: 10000 });
+  await page.goto(`file://${path.join(__dirname, "template.html")}`);
+  await page.waitForFunction("typeof ml5 !== 'undefined'", { timeout: 30000 });
 
   const resultado = await page.evaluate(async (imgSrc) => {
     return new Promise((resolve, reject) => {
