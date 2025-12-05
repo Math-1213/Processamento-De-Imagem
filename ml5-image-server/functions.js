@@ -41,7 +41,7 @@ async function processarImagemNode(caminhoImagem, pastaSaida) {
       img.src = imgSrc;
       img.onload = async () => {
         try {
-          const classifier = await ml5.imageClassifier("MobileNet");
+          const classifier = await ml5.imageClassifier("https://teachablemachine.withgoogle.com/models/w4EAK2pbb/"); // Modelo
           const results = await classifier.classify(img);
           resolve(results);
         } catch (err) {
