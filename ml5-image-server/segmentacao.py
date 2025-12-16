@@ -1,7 +1,15 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import requests
+import json
+import os
 
+# CONSTANTS
+url = "http://localhost:5000/processarImagem"
+caminho_segmentado = "segmentado/img.jpg"
+
+# FUNÇÕES AUXILIARES
 def suavizacao_grab(caminho_imagem):
     """
     Aplica GrabCut assumindo que o objeto está centralizado.
@@ -94,8 +102,82 @@ def suavizacao_grab(caminho_imagem):
     plt.tight_layout()
     plt.show()
 
-# --- Como Usar ---
-instrumentos = ['uploads/img6.jpg','uploads/img11.jpg','uploads/img10.jpg','uploads/img12.jpg' ]
+    cv2.imwrite(caminho_segmentado, cv2.cvtColor(resultado_final, cv2.COLOR_RGB2BGR))
 
-for imagem in instrumentos:
-    suavizacao_grab(imagem)
+# Envia para o servidor ml5 para classificação
+def get_prediction(caminho_imagem):
+    try:
+        with open(caminho_imagem, "rb") as img_file:
+            files = {
+                "image": img_file
+            }
+
+            resposta = requests.post(url, files=files)
+            resposta.raise_for_status()
+
+            dados = resposta.json()
+            print("\nResposta do servidor:")
+            print(json.dumps(dados, indent=2))
+
+            plotar_resultado(dados["resultado"])
+
+    except requests.exceptions.RequestException as e:
+        print("Erro ao enviar a imagem:", e)
+
+def plotar_resultado(resultado):
+    labels = [item["label"] for item in resultado]
+    confidences = [item["confidence"] for item in resultado]
+
+    plt.figure(figsize=(10, 5))
+    bars = plt.bar(labels, confidences)
+
+    plt.title("Classificação da Imagem (ml5)")
+    plt.ylabel("Confiança (%)")
+    plt.xlabel("Classe")
+    plt.ylim(0, 1)
+
+    # Destacar o maior valor
+    maior_idx = confidences.index(max(confidences))
+    bars[maior_idx].set_edgecolor("black")
+    bars[maior_idx].set_linewidth(2)
+
+    # Mostrar porcentagem com 4 casas decimais
+    for bar, conf in zip(bars, confidences):
+        porcentagem = conf * 100
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height(),
+            f"{porcentagem:.4f}%",
+            ha="center",
+            va="bottom",
+            fontsize=9
+        )
+
+    plt.tight_layout()
+    plt.show()
+
+# --- Como Usar ---
+def main():
+    os.makedirs("segmentado", exist_ok=True)
+    
+    caminho = input("Digite o caminho da imagem: ").strip()
+
+    if not os.path.isfile(caminho):
+        print("Erro: caminho inválido.")
+        return
+
+    print("\nSegmentando imagem...")
+    suavizacao_grab(caminho)
+
+    if caminho_segmentado:
+        print("\nEnviando imagem segmentada para o servidor ML5...")
+        get_prediction(caminho_segmentado)
+    else:
+        print("Erro na segmentação.")
+
+if __name__ == "__main__":
+    main()
+
+
+
+
